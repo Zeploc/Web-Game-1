@@ -9,14 +9,17 @@
     color: #3b3b3b;
 }
 
-html, body{
+html, body
+{
     margin: 0;
     padding: 0;
+    /* height: 100%; */
 }
 body
 {
-    /* height: 100vh; */
     background-color: antiquewhite;
+    width: 100vw;
+    overflow: hidden;
 }
 h1
 {
