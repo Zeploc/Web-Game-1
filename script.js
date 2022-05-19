@@ -70,9 +70,13 @@ class Entity
 		document.firstChild.appendChild(this.Element);
 		
 		// Add the ondragstart event listener
-		this.Element.addEventListener("touchmove", TouchMove);
 		this.Element.addEventListener("touchstart", TouchStart);
+		this.Element.addEventListener("touchmove", TouchMove);
 		this.Element.addEventListener("touchend", TouchEnd);
+		
+		this.Element.addEventListener("mousedown", MouseStart);
+		this.Element.addEventListener("mousemove", MouseMove);
+		this.Element.addEventListener("mouseup", MouseEnd);
 	}
 	
 	Update(DeltaTime)
@@ -140,35 +144,62 @@ function Tick(DeltaTime)
 function TouchStart(event)
 {    
     var touchLocation = event.targetTouches[0];
-	
-	Difference.x = Ball.position.x - touchLocation.pageX;
-	Difference.y = Ball.position.y - touchLocation.pageY;	
-	Ball.gravityEnabled = false;
-	Ball.PhysicsEnabled = false;
-			
-    event.preventDefault();
-}
-function TouchEnd(event)
-{    
-	Ball.gravityEnabled = true;
-	Ball.PhysicsEnabled = true;
+	GrabBall(new Vector(touchLocation.pageX, touchLocation.pageY));
 			
     event.preventDefault();
 }
 function TouchMove(event)
 {    
-    console.log("drag");   
     var touchLocation = event.targetTouches[0];
-	console.log("New touch x: " + touchLocation.pageX + " y: " + touchLocation.pageY);
-    const TouchPos = new Vector(touchLocation.pageX, touchLocation.pageY);
-	// var rect = Ball.Element.getBoundingClientRect();	
-	let PreviousPosition = Ball.position;
-	Ball.position = TouchPos.AddVector(Difference)
-	Ball.velocity = Ball.position.SubtractVector(PreviousPosition).MultipleVector(30);
-	// Ball.velocity.ZeroVector();
-	
+	MoveBall(new Vector(touchLocation.pageX, touchLocation.pageY));	
     
     event.preventDefault(); 
+}
+function TouchEnd(event)
+{    
+	DropBall();
+			
+    event.preventDefault();
+}
+function MouseStart(event)
+{    
+	GrabBall(new Vector(event.clientX, event.clientY));
+			
+    event.preventDefault();
+}
+function MouseMove(event)
+{    
+	if (event.button <= 0)
+		return;
+	console.log(event.button);
+	MoveBall(new Vector(event.clientX, event.clientY));	
+    
+    event.preventDefault(); 
+}
+function MouseEnd(event)
+{    
+	DropBall();
+			
+    event.preventDefault();
+}
+
+function GrabBall(position)
+{
+	Difference.x = Ball.position.x - position.x;
+	Difference.y = Ball.position.y - position.y;	
+	Ball.gravityEnabled = false;
+	Ball.PhysicsEnabled = false;
+}
+function MoveBall(position)
+{
+	let PreviousPosition = Ball.position;
+	Ball.position = position.AddVector(Difference)
+	Ball.velocity = Ball.position.SubtractVector(PreviousPosition).MultipleVector(30);
+}
+function DropBall()
+{
+	Ball.gravityEnabled = true;
+	Ball.PhysicsEnabled = true;
 }
 
 function CreateDebugBlock(posX, posY, color, parent)
