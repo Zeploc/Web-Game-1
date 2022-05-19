@@ -1,6 +1,4 @@
 
-
-
 const TicksPerSecond = 60;
 
 
@@ -108,7 +106,7 @@ class Entity
 	}
 }
 
-let Ball = new Entity();
+let Ball;
 let Difference = new Vector(0,0);
 
 if (document.readyState == 'loading')
@@ -121,7 +119,7 @@ else
 }
 function Setup()
 {	
-	
+	Ball = new Entity();	
 	Ball.position.x = 100;
 	
 	const DeltaTime = 1 / 60;
