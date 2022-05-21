@@ -88,7 +88,7 @@ class Entity
 		
 		this.Element.addEventListener("mousedown", MouseStart);
 		addEventListener("mousemove", MouseMove);
-		this.Element.addEventListener("mouseup", MouseEnd);
+		addEventListener("mouseup", MouseEnd);
 		
 		this.mouseDown = false;
 		this.previousPositions = [this.position];
