@@ -1,5 +1,6 @@
 
 const TicksPerSecond = 60;
+const DeltaTime = 1 / 60;
 
 
 class Vector
@@ -35,10 +36,21 @@ class Vector
 		v1.y *= m;
 		return v1;
 	}
+	DivideVector (m)
+	{
+		let v1 = CopyVector(this);
+		v1.x /= m;
+		v1.y /= m;
+		return v1;
+	}
 	ZeroVector()
 	{
 		this.x = 0;
 		this.y = 0;
+	}
+	ToString()
+	{
+		return "x: " + this.x + " y: " + this.y;
 	}
 }
 function CopyVector(v2)
@@ -57,7 +69,7 @@ class Entity
 		this.size = size;
 		this.gravityEnabled = true;
 		this.PhysicsEnabled = true;
-		this.GroundFriction = .5;
+		this.GroundFriction = .35;
 		
 		this.Element = document.createElement("div");
 		this.Element.style.backgroundColor = color;
@@ -75,8 +87,11 @@ class Entity
 		this.Element.addEventListener("touchend", TouchEnd);
 		
 		this.Element.addEventListener("mousedown", MouseStart);
-		this.Element.addEventListener("mousemove", MouseMove);
+		addEventListener("mousemove", MouseMove);
 		this.Element.addEventListener("mouseup", MouseEnd);
+		
+		this.mouseDown = false;
+		this.previousPositions = [this.position];
 	}
 	
 	Update(DeltaTime)
@@ -103,7 +118,11 @@ class Entity
 			this.position.x = 0;
 			this.velocity.x = -this.velocity.x * 0.5;
 		}
-		
+		this.previousPositions.push(this.position);
+		const MaxPrevPositions = 26;
+		let StartNumber = this.previousPositions.length - MaxPrevPositions - 1;
+		StartNumber = Math.max(StartNumber, 0);
+		this.previousPositions = this.previousPositions.slice(StartNumber);
 		
 		this.Element.style.top = this.position.y + "px";
 		this.Element.style.left = this.position.x + "px";
@@ -124,9 +143,11 @@ else
 function Setup()
 {	
 	Ball = new Entity();	
-	Ball.position.x = 100;
+	const windowHeight = document.firstChild.getBoundingClientRect().bottom;
 	
-	const DeltaTime = 1 / 60;
+	Ball.position.x = 100;
+	Ball.position.y = windowHeight - 300;
+	
 	setInterval(Tick, DeltaTime, DeltaTime);
 }
 
@@ -163,21 +184,23 @@ function TouchEnd(event)
 }
 function MouseStart(event)
 {    
+	Ball.mouseDown = true;
 	GrabBall(new Vector(event.clientX, event.clientY));
 			
     event.preventDefault();
 }
 function MouseMove(event)
-{    
-	if (event.button <= 0)
-		return;
-	console.log(event.button);
-	MoveBall(new Vector(event.clientX, event.clientY));	
+{    	
+	if (Ball.mouseDown)
+	{
+		MoveBall(new Vector(event.clientX, event.clientY));	
+	}
     
-    event.preventDefault(); 
+		event.preventDefault(); 
 }
 function MouseEnd(event)
 {    
+	Ball.mouseDown = false;
 	DropBall();
 			
     event.preventDefault();
@@ -192,14 +215,20 @@ function GrabBall(position)
 }
 function MoveBall(position)
 {
-	let PreviousPosition = Ball.position;
 	Ball.position = position.AddVector(Difference)
-	Ball.velocity = Ball.position.SubtractVector(PreviousPosition).MultipleVector(30);
 }
 function DropBall()
 {
 	Ball.gravityEnabled = true;
 	Ball.PhysicsEnabled = true;
+	let TotalVelocity = new Vector(0,0);
+	for (let i = 1; i < Ball.previousPositions.length; i++)
+	{
+		const VelChange = Ball.previousPositions[i].SubtractVector(Ball.previousPositions[i-1]);
+		TotalVelocity = TotalVelocity.AddVector(VelChange.DivideVector(DeltaTime));
+	}
+	TotalVelocity = TotalVelocity.DivideVector(Ball.previousPositions.length - 1);	
+	Ball.velocity = TotalVelocity;
 }
 
 function CreateDebugBlock(posX, posY, color, parent)
